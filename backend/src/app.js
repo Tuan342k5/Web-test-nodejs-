@@ -1,58 +1,35 @@
 import "./config/env.js";
 import express from "express";
 import cors from "cors";
-import authRoutes from "./routes/auth.routes.js";
-import adminRoutes from "./routes/admin.routes.js";
-import userRoutes from "./routes/user.routes.js";
+import { corsOptions } from "./config/cors.js";
+import rootRoutes from "./routes/index.js";
+import { rateLimiter } from "./middlewares/rateLimiter.js";
+import { notFound } from "./middlewares/notFound.js";
+import { errorHandler } from "./middlewares/errorHandler.js";
 
 const app = express();
-const PORT = process.env.PORT || 3000;
 
-app.use(cors({ origin: "http://localhost:5173" }));
+// Middlewares toàn cục
+app.use(cors(corsOptions));
 app.use(express.json());
+app.use(rateLimiter(200, 60 * 1000)); // 200 requests/phút
 
-// API kiểm tra trạng thái server
-app.get("/api/health", (req, res) => {
+// Gắn các API routes dưới /api
+app.use("/api", rootRoutes);
+
+// Root route
+app.get("/", (req, res) => {
   res.status(200).json({
     success: true,
-    message: "Auth RBAC Backend is running",
+    message: "Auth RBAC Enterprise Backend API",
+    documentation: "/api/health",
   });
 });
 
-// Định tuyến các nhóm API
-app.use("/api/auth", authRoutes);
-app.use("/api/user", userRoutes);
-app.use("/api/admin", adminRoutes);
+// Middleware xử lý 404
+app.use(notFound);
 
-// Route không tồn tại
-app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    message: "API endpoint không tồn tại.",
-  });
-});
+// Middleware xử lý lỗi tập trung
+app.use(errorHandler);
 
-// Error-handling middleware
-app.use((error, req, res, next) => {
-  if (res.headersSent) {
-    return next(error);
-  }
-
-  const statusCode = error.statusCode || 500;
-
-  if (statusCode >= 500) {
-    console.error(error);
-  }
-
-  return res.status(statusCode).json({
-    success: false,
-    message:
-      statusCode >= 500
-        ? "Đã xảy ra lỗi phía máy chủ."
-        : error.message,
-  });
-});
-
-app.listen(PORT, () => {
-  console.log(`Backend running at http://localhost:${PORT}`);
-});
+export default app;

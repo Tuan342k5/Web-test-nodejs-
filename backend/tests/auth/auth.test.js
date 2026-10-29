@@ -4,6 +4,7 @@ import "../../src/config/env.js";
 import { createAccessToken, verifyAccessToken } from "../../src/security/token.service.js";
 import { hashPassword, comparePassword } from "../../src/security/password.service.js";
 import { blacklistToken, isTokenBlacklisted } from "../../src/security/tokenBlacklist.service.js";
+import { getGoogleOAuthUrl } from "../../src/security/sso.service.js";
 
 test("Auth Module Tests", async (t) => {
   await t.test("Password service should hash and compare passwords correctly", async () => {
@@ -44,5 +45,12 @@ test("Auth Module Tests", async (t) => {
     const blacklistedStatus = await isTokenBlacklisted(jti);
     assert.equal(blacklistedStatus, true);
   });
-});
 
+  await t.test("SSO service should build valid Google OAuth redirect URL", () => {
+    const url = getGoogleOAuthUrl("test-state");
+    assert.ok(url.startsWith("https://accounts.google.com/o/oauth2/v2/auth"));
+    assert.ok(url.includes("client_id="));
+    assert.ok(url.includes("redirect_uri="));
+    assert.ok(url.includes("scope="));
+  });
+});

@@ -1,0 +1,63 @@
+services:
+  # 1. Ứng dụng Backend API
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: auth-rbac-backend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      NODE_ENV: production
+      DATABASE_URL: postgresql://postgres:postgres_password@postgres:5432/auth_rbac_db
+      DB_SSL: "false"
+      JWT_ACCESS_SECRET: c2VjdXJpdHktand0LXNlY3JldC1hdXRoLXJiYWMtZGVtby0yMDI2LWVudGVycHJpc2U=
+      JWT_ACCESS_EXPIRES_IN: 15m
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # 2. Database PostgreSQL
+  postgres:
+    image: postgres:16-alpine
+    container_name: auth-rbac-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres_password
+      POSTGRES_DB: auth_rbac_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./migrations/001_create_users_table.sql:/docker-entrypoint-initdb.d/001_create_users_table.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d auth_rbac_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # 3. Cache & Token Blacklist Redis
+  redis:
+    image: redis:7-alpine
+    container_name: auth-rbac-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+  redis_data:
+

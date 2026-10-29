@@ -24,3 +24,15 @@ dist-ssr
 *.sw?
 node_modules/
 .env
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+coverage/

@@ -2,7 +2,11 @@ import * as authRepository from "./auth.repository.js";
 import { comparePassword } from "../../security/password.service.js";
 import { createAccessToken, verifyAccessToken, JWT_ACCESS_EXPIRES_IN } from "../../security/token.service.js";
 import { blacklistToken } from "../../security/tokenBlacklist.service.js";
-import { authenticateWithGoogle } from "../../security/sso.service.js";
+import {
+  authenticateWithGoogle,
+  getGoogleOAuthUrl,
+  handleGoogleCallback,
+} from "../../security/sso.service.js";
 import { ApiError } from "../../utils/ApiError.js";
 
 /**
@@ -36,7 +40,21 @@ export async function login(email, password) {
 }
 
 /**
- * Xử lý đăng nhập Google SSO
+ * Lấy URL Google OAuth để chuyển hướng người dùng
+ */
+export function getGoogleLoginUrl(state) {
+  return getGoogleOAuthUrl(state);
+}
+
+/**
+ * Xử lý callback từ Google sau khi người dùng xác thực thành công
+ */
+export async function processGoogleCallback(code) {
+  return handleGoogleCallback(code);
+}
+
+/**
+ * Xử lý đăng nhập Google SSO (qua Google Identity Services credential hoặc body)
  */
 export async function loginWithSSO(payload) {
   return authenticateWithGoogle(payload);
@@ -80,4 +98,3 @@ export async function logout(authHeader, userMeta = {}) {
     entry,
   };
 }
-

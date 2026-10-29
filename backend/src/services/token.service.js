@@ -1,6 +1,7 @@
 import "../config/env.js";
 import jwt from "jsonwebtoken";
 import { randomUUID } from "node:crypto";
+import "dotenv/config";
 
 export const JWT_ACCESS_EXPIRES_IN =
   process.env.JWT_ACCESS_EXPIRES_IN || "15m";

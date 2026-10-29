@@ -28,6 +28,7 @@ export function AuthProvider({ children }) {
 
     try {
       setLoading(true);
+      setToken(currentToken);
       const userData = await authService.getCurrentUser();
       setUser(userData);
       setError(null);
@@ -72,6 +73,26 @@ export function AuthProvider({ children }) {
     return data.user;
   };
 
+  // Đăng nhập trực tiếp bằng Access Token (dành cho SSO callback)
+  const loginWithToken = async (accessToken) => {
+    setError(null);
+    setStoredToken(accessToken);
+    setToken(accessToken);
+    try {
+      setLoading(true);
+      const userData = await authService.getCurrentUser();
+      setUser(userData);
+      return userData;
+    } catch (err) {
+      removeStoredToken();
+      setToken("");
+      setUser(null);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Đăng xuất: Gọi API thu hồi token vào Redis và dọn localStorage
   const logout = async () => {
     try {
@@ -94,10 +115,10 @@ export function AuthProvider({ children }) {
     isAuthenticated: Boolean(user && token),
     login,
     loginGoogleSSO,
+    loginWithToken,
     logout,
     refreshUser: loadUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
-

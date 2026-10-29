@@ -27,11 +27,11 @@ import NotFoundPage from "../pages/NotFoundPage.jsx";
  * Component điều hướng thông minh dựa vào phiên và quyền
  */
 function RootRedirect() {
-  const { user, token, loading } = useAuth();
+  const { user, isAuthenticated, loading } = useAuth();
 
   if (loading) return <Loading />;
 
-  if (!user || !token) {
+  if (!isAuthenticated || !user) {
     return <Navigate to={ROUTES.LOGIN} replace />;
   }
 
@@ -61,11 +61,11 @@ export function AppRouter() {
           }
         />
 
-        {/* Trang USER */}
+        {/* Trang USER: Dành riêng cho quyền USER */}
         <Route
           path={ROUTES.USERS}
           element={
-            <ProtectedRoute allowedRoles={[ROLES.USER, ROLES.ADMIN, ROLES.MASTER_ADMIN]}>
+            <ProtectedRoute allowedRoles={[ROLES.USER]}>
               <UsersPage />
             </ProtectedRoute>
           }
@@ -74,23 +74,23 @@ export function AppRouter() {
         <Route
           path="/users"
           element={
-            <ProtectedRoute allowedRoles={[ROLES.USER, ROLES.ADMIN, ROLES.MASTER_ADMIN]}>
+            <ProtectedRoute allowedRoles={[ROLES.USER]}>
               <UsersPage />
             </ProtectedRoute>
           }
         />
 
-        {/* Trang ADMIN */}
+        {/* Trang ADMIN: Dành riêng cho quyền ADMIN */}
         <Route
           path={ROUTES.ADMIN}
           element={
-            <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.MASTER_ADMIN]}>
+            <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
               <AdminPage />
             </ProtectedRoute>
           }
         />
 
-        {/* Trang MASTER_ADMIN */}
+        {/* Trang MASTER_ADMIN: Dành riêng cho quyền MASTER_ADMIN */}
         <Route
           path={ROUTES.MASTER_ADMIN}
           element={

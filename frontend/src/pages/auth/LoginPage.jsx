@@ -23,7 +23,7 @@ import { getDefaultRouteForRole } from "../../constants/routes.js";
 import { API_BASE_URL } from "../../config/env.js";
 
 export default function LoginPage() {
-  const { user, login, loginGoogleSSO } = useAuth();
+  const { user, isAuthenticated, login, loginGoogleSSO } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -45,8 +45,8 @@ export default function LoginPage() {
     }
   }, [searchParams]);
 
-  // Nếu người dùng đã đăng nhập sẵn, điều hướng tới trang tương ứng vai trò
-  if (user) {
+  // Nếu người dùng đã đăng nhập đầy đủ, điều hướng tới trang tương ứng vai trò
+  if (isAuthenticated && user) {
     return <Navigate to={getDefaultRouteForRole(user.role)} replace />;
   }
 
@@ -83,12 +83,12 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      await loginGoogleSSO({
+      const loggedUser = await loginGoogleSSO({
         email: ssoEmail.trim(),
         name: ssoName.trim() || ssoEmail.split("@")[0],
       });
-      // Đăng nhập Google thành công chuyển hướng thẳng đến trang user
-      navigate(ROUTES.USERS);
+      // Đăng nhập Google thành công chuyển hướng đúng vai trò hiện tại
+      navigate(getDefaultRouteForRole(loggedUser.role));
     } catch (err) {
       setError(err.message || "Đăng nhập Google SSO thất bại.");
     } finally {

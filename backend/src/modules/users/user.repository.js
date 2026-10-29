@@ -120,6 +120,16 @@ export async function findOrCreateSSOUser({ email, name, role = "USER", provider
 
   const existing = await findByEmail(normalized);
   if (existing) {
+    // Nếu có tên đầy đủ từ Google và tài khoản cũ chưa có tên (hoặc chỉ có prefix email), cập nhật tên mới
+    if (name && (!existing.name || existing.name === normalized.split("@")[0])) {
+      try {
+        await pool.query(`UPDATE public.users SET name = $1 WHERE id = $2`, [name, existing.id]);
+        existing.name = name;
+      } catch (err) {
+        const mem = memoryUsers.find((u) => u.id === existing.id);
+        if (mem) mem.name = name;
+      }
+    }
     return { user: existing, isNew: false };
   }
 
